@@ -2,7 +2,7 @@ import pandas as pd
 import cv2
 import matplotlib.pyplot as plt
 
-from dataset_preparation import (
+from .data_preprocessing import (
     fen_to_board,
     split_board_with_context,
     create_samples_from_frame
@@ -11,7 +11,7 @@ from dataset_preparation import (
 # -----------------------------
 # Paths
 # -----------------------------
-GAME_DIR = "./chessboard-vision-ml/data_base/game2_per_frame"
+GAME_DIR = "./data_base/game2_per_frame"
 CSV_PATH = f"{GAME_DIR}/game2.csv"
 IMAGES_DIR = f"{GAME_DIR}/tagged_images"
 
