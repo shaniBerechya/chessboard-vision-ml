@@ -11,7 +11,7 @@ from dataset_preparation import (
 # -----------------------------
 # Paths
 # -----------------------------
-GAME_DIR = "data_base/game2_per_frame"
+GAME_DIR = "./chessboard-vision-ml/data_base/game2_per_frame"
 CSV_PATH = f"{GAME_DIR}/game2.csv"
 IMAGES_DIR = f"{GAME_DIR}/tagged_images"
 

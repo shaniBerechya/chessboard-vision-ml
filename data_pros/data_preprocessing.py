@@ -1,6 +1,6 @@
 """
 Chessboard Dataset Preparation
-Stages 1–2: Data loading and preprocessing
+Stages 1-2: Data loading and preprocessing
 
 This file contains utility functions to:
 - Load chess game data from ZIP files
