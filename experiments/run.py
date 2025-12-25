@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 
 from experiments.configs import EXPERIMENTS
 from experiments.run_experiment import run_experiment
-from data_pros.data_preprocessing import build_dataset_from_game
 
 # -------------------------
 # Choose experiment
@@ -246,3 +245,20 @@ print(f" - Results : {results_path.name}")
 print(f" - Model   : {ckpt_info}")
 print(f" - Plots   : {len(plots_saved)} files")
 print(f" - Summary : {summary_path.name}")
+
+def main():
+    experiment_name = "cnn_baseline"
+    exp = EXPERIMENTS[experiment_name]
+
+    history = run_experiment(
+        model_cls=exp["model_cls"],
+        model_config=exp["model_config"],
+        training_config=exp["training_config"],
+        game_dir="./data_base/game2_per_frame"
+    )
+
+    print("Training finished")
+
+
+if __name__ == "__main__":
+    main()
