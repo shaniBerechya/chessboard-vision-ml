@@ -1,4 +1,7 @@
-def build_model_fully_conected(input_dim, output_dim, hidden_dim, num_layers, activation_func=ReLU):
+import torch.nn as nn
+
+
+def build_model_fully_conected(input_dim, output_dim, hidden_dim, num_layers,is_linear=False, activation_func=nn.ReLU):
     """
     Builds a PyTorch neural network model.
 
@@ -19,15 +22,18 @@ def build_model_fully_conected(input_dim, output_dim, hidden_dim, num_layers, ac
     --------
     a Fully conected network
     """
+    if is_linear:
+      return nn.Linear(input_dim, output_dim)
 
+    else:
       layers = []
 
       layers.append(nn.Linear(input_dim, hidden_dim))
-      layers.append(nn.activation_func())
+      layers.append(activation_func())
 
       for _ in range(num_layers):
           layers.append(nn.Linear(hidden_dim, hidden_dim))
-          layers.append(nn.activation_func())
+          layers.append(activation_func())
 
       layers.append(nn.Linear(hidden_dim, output_dim))
 
