@@ -3,7 +3,7 @@ import torch.nn as nn
 from torchvision import models
 
 
-class ChessSquareClassifier(nn.Module):
+class Dropout(nn.Module):
     """
     Generic classifier for chess square patches.
 
@@ -86,3 +86,12 @@ def enable_dropout_in_eval(model: nn.Module) -> None:
     for m in model.modules():
         if isinstance(m, nn.Dropout):
             m.train()
+
+
+BASELINE_CONFIG = {
+        "backbone_name": "resnet18",
+        "num_classes": 13,
+        "pretrained": True,
+        "dropout_p": 0.3,
+        "hidden_dim": 256
+}

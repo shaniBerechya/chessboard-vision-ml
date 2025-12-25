@@ -1,3 +1,4 @@
+
 from experiments.configs import EXPERIMENTS
 from experiments.run_experiment import run_experiment
 from data_pros.data_preprocessing import build_dataset_from_game
@@ -5,7 +6,7 @@ from data_pros.data_preprocessing import build_dataset_from_game
 # -------------------------
 # Choose experiment
 # -------------------------
-EXPERIMENT_NAME = "cnn_baseline"
+EXPERIMENT_NAME = "dropout"
 
 # -------------------------
 # Build dataset
