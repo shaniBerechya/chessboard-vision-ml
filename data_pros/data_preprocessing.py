@@ -94,11 +94,20 @@ def split_board_with_context(image_path, context_ratio=CONTEXT_RATIO):
 # -------------------------------------------------
 # Sample construction
 # -------------------------------------------------
-
-def create_samples_from_frame(image_path, fen, context_ratio=CONTEXT_RATIO):
+def create_samples_from_frame(
+    image_path,
+    fen,
+    context_ratio=CONTEXT_RATIO,
+    game_id=None,
+    frame_id=None
+):
     """
     Create per-square training samples from a single labeled frame.
     Each sample contains a context-aware image patch and its label.
+
+    Adds metadata fields:
+        - game_id
+        - frame_id
     """
     patches = split_board_with_context(image_path, context_ratio)
     labels_2d = fen_to_board(fen)
@@ -112,7 +121,9 @@ def create_samples_from_frame(image_path, fen, context_ratio=CONTEXT_RATIO):
                 "image": patches[idx],
                 "label": labels_2d[i][j],
                 "row": i,
-                "col": j
+                "col": j,
+                "game_id": game_id,
+                "frame_id": frame_id
             })
             idx += 1
 
@@ -140,11 +151,7 @@ def load_game_metadata(game_dir):
 # End-to-end dataset construction (single game)
 # -------------------------------------------------
 
-def build_dataset_from_game(game_dir, context_ratio=CONTEXT_RATIO):
-    """
-    Build a dataset from a single extracted game directory.
-    Returns a list of per-square training samples.
-    """
+def build_dataset_from_game(game_dir, context_ratio=CONTEXT_RATIO, game_id=None):
     df = load_game_metadata(game_dir)
     images_dir = os.path.join(game_dir, "images")
 
@@ -154,15 +161,14 @@ def build_dataset_from_game(game_dir, context_ratio=CONTEXT_RATIO):
         frame_id = int(row["from_frame"])
         fen = row["fen"]
 
-        image_path = os.path.join(
-            images_dir,
-            f"frame_{frame_id:06d}.jpg"
-        )
+        image_path = os.path.join(images_dir, f"frame_{frame_id:06d}.jpg")
 
         samples = create_samples_from_frame(
-            image_path,
-            fen,
-            context_ratio
+            image_path=image_path,
+            fen=fen,
+            context_ratio=context_ratio,
+            game_id=game_id if game_id is not None else os.path.basename(game_dir),
+            frame_id=frame_id
         )
 
         dataset.extend(samples)
