@@ -2,7 +2,7 @@ import pandas as pd
 import cv2
 import matplotlib.pyplot as plt
 
-from .data_preprocessing import (
+from data_preprocessing import (
     fen_to_board,
     split_board_with_context,
     create_samples_from_frame
@@ -70,3 +70,30 @@ plt.imshow(sample["image"])
 plt.axis("off")
 plt.title(f"Label: {sample['label']}")
 plt.show()
+
+# =================================================
+# PyTorch Dataset & DataLoader sanity check
+# =================================================
+
+from chess_dataset import ChessSquareDataset
+from torch.utils.data import DataLoader
+
+print("\n--- PyTorch Dataset sanity check ---")
+
+dataset = ChessSquareDataset(samples)
+
+x, y = dataset[0]
+print("Single tensor shape:", x.shape)
+print("Single label:", y)
+
+loader = DataLoader(
+    dataset,
+    batch_size=32,
+    shuffle=True,
+    num_workers=0  # Windows
+)
+
+images, labels = next(iter(loader))
+print("Batch images shape:", images.shape)
+print("Batch labels shape:", labels.shape)
+
