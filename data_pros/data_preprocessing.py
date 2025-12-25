@@ -142,10 +142,12 @@ def extract_game_zip(zip_path, extract_to):
 
 def load_game_metadata(game_dir):
     """
-    Load the game.csv file containing frame-to-FEN mappings.
+    Load the CSV file inside a game directory (e.g. game2.csv).
     """
-    csv_path = os.path.join(game_dir, "game.csv")
-    return pd.read_csv(csv_path)
+    for fname in os.listdir(game_dir):
+        if fname.endswith(".csv"):
+            return pd.read_csv(os.path.join(game_dir, fname))
+    raise FileNotFoundError(f"No CSV file found in {game_dir}")
 
 # -------------------------------------------------
 # End-to-end dataset construction (single game)
@@ -153,7 +155,7 @@ def load_game_metadata(game_dir):
 
 def build_dataset_from_game(game_dir, context_ratio=CONTEXT_RATIO, game_id=None):
     df = load_game_metadata(game_dir)
-    images_dir = os.path.join(game_dir, "images")
+    images_dir = os.path.join(game_dir, "tagged_images")
 
     dataset = []
 
