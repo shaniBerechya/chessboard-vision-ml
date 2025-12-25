@@ -1,45 +1,29 @@
-"""
-PyTorch Dataset for Chessboard Square Classification
-Each sample is a single square with context.
-"""
-
 import torch
 from torch.utils.data import Dataset
-import numpy as np
 import cv2
+import numpy as np
 
-# -------------------------------------------------
-# Label mapping
-# -------------------------------------------------
-
+# Label mapping (shared, deterministic)
 LABEL_TO_INDEX = {
     "empty": 0,
     "wp": 1, "wn": 2, "wb": 3, "wr": 4, "wq": 5, "wk": 6,
     "bp": 7, "bn": 8, "bb": 9, "br": 10, "bq": 11, "bk": 12
 }
 
-INDEX_TO_LABEL = {v: k for k, v in LABEL_TO_INDEX.items()}
-NUM_CLASSES = len(LABEL_TO_INDEX)
-
-# -------------------------------------------------
-# Dataset
-# -------------------------------------------------
-
 class ChessSquareDataset(Dataset):
     """
-    Dataset of context-aware chessboard square patches.
+    Dataset of individual chessboard squares with context.
+    Each sample = (image_tensor, label_index)
     """
 
-    def __init__(self, samples, target_size=96):
+    def __init__(self, samples, image_size=96):
         """
         Args:
-            samples (list): list of dicts with keys:
-                - image (H x W x 3 numpy array)
-                - label (string)
-            target_size (int): final square image size (target_size x target_size)
+            samples: list of dicts with keys ["image", "label"]
+            image_size: int, target size for square patches (H = W)
         """
         self.samples = samples
-        self.target_size = target_size
+        self.image_size = image_size
 
     def __len__(self):
         return len(self.samples)
@@ -47,25 +31,16 @@ class ChessSquareDataset(Dataset):
     def __getitem__(self, idx):
         sample = self.samples[idx]
 
-        image = sample["image"]
-        label_str = sample["label"]
+        img = sample["image"]          # numpy array (H, W, 3)
+        label_str = sample["label"]    # string label
 
-        # --- resize to fixed size ---
-        image = cv2.resize(
-            image,
-            (self.target_size, self.target_size),
-            interpolation=cv2.INTER_LINEAR
-        )
+        # Resize to fixed size (important for batching!)
+        img = cv2.resize(img, (self.image_size, self.image_size))
 
-        # --- normalize ---
-        image = image.astype(np.float32) / 255.0
+        # Convert to tensor (C, H, W)
+        img = torch.from_numpy(img).permute(2, 0, 1).float() / 255.0
 
-        # HWC -> CHW
-        image = np.transpose(image, (2, 0, 1))
-        image_tensor = torch.tensor(image, dtype=torch.float32)
+        label = LABEL_TO_INDEX[label_str]
+        label = torch.tensor(label, dtype=torch.long)
 
-        # --- label encoding ---
-        label_idx = LABEL_TO_INDEX[label_str]
-        label_tensor = torch.tensor(label_idx, dtype=torch.long)
-
-        return image_tensor, label_tensor
+        return img, label
