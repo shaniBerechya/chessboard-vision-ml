@@ -30,6 +30,15 @@ def sanitize_training_config(cfg: dict):
             clean_cfg[k] = v
     return clean_cfg
 
+def sanitize_model_config(cfg: dict):
+    clean_cfg = {}
+    for k, v in cfg.items():
+        if isinstance(v, nn.Module):
+            clean_cfg[k] = v.__class__.__name__
+        else:
+            clean_cfg[k] = v
+    return clean_cfg
+
 
 def plot_error_curves(history: dict, save_path: Path | None = None, show: bool = False):
     train_loss = history.get("train_loss", [])
@@ -236,7 +245,7 @@ def main():
         "experiment_name": exp_name,
         "timestamp": timestamp,
         "model_class": cfg["model_cls"].__name__,
-        "model_config": cfg["model_config"],
+        "model_config": sanitize_model_config(cfg["model_config"]),
         "training_config": sanitize_training_config(cfg["training_config"]),
         "game_dir": args.game_dir,
         "checkpoint_path": str(checkpoint_path),
