@@ -1,14 +1,19 @@
 import torch.nn as nn
 
-from models.cnn_generic import CNNGeneric, CNN_BASELINE_CONFIG
-from models.ml_ae_model import MLAutoEncoder, ML_AE_BASELINE_CONFIG
-from models.dropout import Dropout, BASELINE_CONFIG as DROPOUT_BASELINE_CONFIG
+from models.cnn_generic import CNNGeneric
+from models.ml_ae_model import MLAutoEncoder
+from models.dropout import Dropout
 
 
 EXPERIMENTS = {
     "cnn_baseline": {
         "model_cls": CNNGeneric,
-        "model_config": CNN_BASELINE_CONFIG,
+        "model_config":{
+            "in_channels": 3,
+            "conv_channels": [32, 64, 128],
+            "input_size": 96,
+            "num_classes": 13
+        },
         "training_config": {
             "lr": 1e-3,
             "epochs": 10,
@@ -20,7 +25,14 @@ EXPERIMENTS = {
 
     "ml_ae": {
         "model_cls": MLAutoEncoder,
-        "model_config": ML_AE_BASELINE_CONFIG,
+        "model_config": {
+            "latent_dim": 256,
+            "num_classes": 13,
+            "in_channels": 3,
+            "backbone": resnet18(weights=ResNet18_Weights.DEFAULT),
+            "alpha": 1.0,
+            "beta": 1.0
+        },
         "training_config": {
             "lr": 1e-3,
             "epochs": 10,
@@ -32,7 +44,13 @@ EXPERIMENTS = {
 
     "dropout": {
         "model_cls": Dropout,
-        "model_config": DROPOUT_BASELINE_CONFIG,
+                "model_config": {
+                "backbone_name": "resnet18",
+                "num_classes": 13,
+                "pretrained": True,
+                "dropout_p": 0.3,
+                "hidden_dim": 256
+        },
         "training_config": {
             "lr": 1e-3,
             "epochs": 10,
