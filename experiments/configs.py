@@ -8,7 +8,7 @@ from models.dropout import Dropout, BASELINE_CONFIG as DROPOUT_BASELINE_CONFIG
 EXPERIMENTS = {
     "cnn_baseline": {
         "model_cls": CNNGeneric,
-        "model_config": BASELINE_CONFIG,
+        "model_config": CNN_BASELINE_CONFIG,
         "training_config": {
             "lr": 1e-3,
             "epochs": 10,
@@ -20,7 +20,7 @@ EXPERIMENTS = {
 
     "ml_ae": {
         "model_cls": MLAutoEncoder,
-        "model_config": BASELINE_CONFIG,
+        "model_config": ML_AE_BASELINE_CONFIG,
         "training_config": {
             "lr": 1e-3,
             "epochs": 10,

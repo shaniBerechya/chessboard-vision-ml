@@ -12,35 +12,19 @@ from data_pros.chess_dataset import ChessSquareDataset, LABEL_TO_INDEX
 from experiments.train_model import TrainModel
 
 
-#TODO: need to ajesat the new accuracy_fn to dell with ml_ae output
-# def accuracy_fn(outputs, targets):
-#     """
-#     Simple classification accuracy
-#     """
-#     if isinstance(outputs, tuple):
-#         _, logits, _ = outputs
-#         preds = logits.argmax(dim=1)
-#     else:
-#         preds = outputs.argmax(dim=1)
-#     return (preds == targets).float().mean().item()
-
-INDEX_TO_LABEL = {v: k for k, v in LABEL_TO_INDEX.items()}
-
-
 def run_experiment(
     model_cls,
     model_config,
     training_config,
     game_dir,
     experiment_name,
-    checkpoint_path=None
+    output_dir,
 ):
-
-    # -------------------------
-    # Device
-    # -------------------------
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # -------------------------
+    # Dataset
+    # -------------------------
     samples = build_dataset_from_game(game_dir)
     dataset = ChessSquareDataset(
         samples,
@@ -49,7 +33,9 @@ def run_experiment(
 
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+    train_dataset, val_dataset = random_split(
+        dataset, [train_size, val_size]
+    )
 
     train_loader = DataLoader(
         train_dataset,
@@ -63,6 +49,9 @@ def run_experiment(
         shuffle=False
     )
 
+    # -------------------------
+    # Model
+    # -------------------------
     model = model_cls(**model_config).to(device)
 
     trainer = TrainModel(
@@ -72,6 +61,9 @@ def run_experiment(
         loss_fn=training_config["loss_fn"]
     )
 
+    # -------------------------
+    # Training
+    # -------------------------
     history = trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
@@ -80,7 +72,7 @@ def run_experiment(
     )
 
     # -------------------------
-    # Validation metrics + confusion matrix
+    # Validation predictions
     # -------------------------
     model.eval()
     all_preds = []
@@ -101,6 +93,7 @@ def run_experiment(
     all_targets = np.concatenate(all_targets)
 
     labels = list(LABEL_TO_INDEX.keys())
+
     cm = confusion_matrix(
         all_targets,
         all_preds,
@@ -108,10 +101,10 @@ def run_experiment(
     )
 
     # -------------------------
-    # Save confusion matrix (NO plt.show)
+    # Save confusion matrix INSIDE run_dir
     # -------------------------
-    results_dir = Path("results") / experiment_name
-    results_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     fig, ax = plt.subplots(figsize=(8, 8))
     disp = ConfusionMatrixDisplay(
@@ -121,23 +114,19 @@ def run_experiment(
     disp.plot(ax=ax, cmap="Blues", colorbar=True)
     ax.set_title("Confusion Matrix (with empty)")
 
-    cm_path = results_dir / "confusion_matrix_with_empty.png"
+    cm_path = output_dir / "confusion_matrix_with_empty.png"
     plt.savefig(cm_path, dpi=160, bbox_inches="tight")
     plt.close()
 
     print(f"✅ Confusion matrix saved to {cm_path}")
 
     # -------------------------
-    # Save model
+    # Save model INSIDE run_dir
     # -------------------------
-    if checkpoint_path is None:
-        os.makedirs("checkpoints", exist_ok=True)
-        checkpoint_path = f"checkpoints/{experiment_name}.pth"
-    else:
-        os.makedirs(os.path.dirname(str(checkpoint_path)), exist_ok=True)
+    ckpt_path = output_dir / "model.pth"
+    torch.save(model.state_dict(), ckpt_path)
 
-    torch.save(model.state_dict(), checkpoint_path)
-    print(f"\n✅ Model saved to {checkpoint_path}")
-
+    print(f"✅ Model saved to {ckpt_path}")
+    print("✅ Experiment finished successfully")
 
     return history

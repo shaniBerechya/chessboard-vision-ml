@@ -238,7 +238,7 @@ def main():
         model_config=cfg["model_config"],
         training_config=cfg["training_config"],
         game_dir=args.game_dir,
-        checkpoint_path=checkpoint_path,
+        output_dir=run_dir,
     )
 
     metadata = {
