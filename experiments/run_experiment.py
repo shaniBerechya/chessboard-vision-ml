@@ -1,22 +1,30 @@
 import os
+from pathlib import Path
+
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 from data_pros.data_preprocessing import build_dataset_from_game
-from data_pros.chess_dataset import ChessSquareDataset
+from data_pros.chess_dataset import ChessSquareDataset, LABEL_TO_INDEX
 from experiments.train_model import TrainModel
 
 
-def accuracy_fn(outputs, targets):
-    """
-    Simple classification accuracy
-    """
-    if isinstance(outputs, tuple):
-        _, logits, _ = outputs
-        preds = logits.argmax(dim=1)
-    else:
-        preds = outputs.argmax(dim=1)
-    return (preds == targets).float().mean().item()
+#TODO: need to ajesat the new accuracy_fn to dell with ml_ae output
+# def accuracy_fn(outputs, targets):
+#     """
+#     Simple classification accuracy
+#     """
+#     if isinstance(outputs, tuple):
+#         _, logits, _ = outputs
+#         preds = logits.argmax(dim=1)
+#     else:
+#         preds = outputs.argmax(dim=1)
+#     return (preds == targets).float().mean().item()
+
+INDEX_TO_LABEL = {v: k for k, v in LABEL_TO_INDEX.items()}
 
 
 def run_experiment(
@@ -33,29 +41,16 @@ def run_experiment(
     # -------------------------
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # -------------------------
-    # Build dataset (raw samples)
-    # -------------------------
     samples = build_dataset_from_game(game_dir)
-
     dataset = ChessSquareDataset(
         samples,
         image_size=training_config["image_size"]
     )
 
-    # -------------------------
-    # Train / Validation split
-    # -------------------------
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
-    train_dataset, val_dataset = random_split(
-        dataset, [train_size, val_size]
-    )
-
-    # -------------------------
-    # DataLoaders
-    # -------------------------
     train_loader = DataLoader(
         train_dataset,
         batch_size=training_config["batch_size"],
@@ -68,14 +63,8 @@ def run_experiment(
         shuffle=False
     )
 
-    # -------------------------
-    # Model
-    # -------------------------
     model = model_cls(**model_config).to(device)
 
-    # -------------------------
-    # Trainer
-    # -------------------------
     trainer = TrainModel(
         model=model,
         device=device,
@@ -83,18 +72,63 @@ def run_experiment(
         loss_fn=training_config["loss_fn"]
     )
 
-    # -------------------------
-    # Training
-    # -------------------------
     history = trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
         epochs=training_config["epochs"],
-        metric_fn=accuracy_fn
+        metric_fn=None
     )
 
     # -------------------------
-    # Save trained model
+    # Validation metrics + confusion matrix
+    # -------------------------
+    model.eval()
+    all_preds = []
+    all_targets = []
+
+    with torch.no_grad():
+        for x, y in val_loader:
+            x = x.to(device)
+            y = y.to(device)
+
+            logits = model(x)
+            preds = logits.argmax(dim=1)
+
+            all_preds.append(preds.cpu().numpy())
+            all_targets.append(y.cpu().numpy())
+
+    all_preds = np.concatenate(all_preds)
+    all_targets = np.concatenate(all_targets)
+
+    labels = list(LABEL_TO_INDEX.keys())
+    cm = confusion_matrix(
+        all_targets,
+        all_preds,
+        labels=list(range(len(labels)))
+    )
+
+    # -------------------------
+    # Save confusion matrix (NO plt.show)
+    # -------------------------
+    results_dir = Path("results") / experiment_name
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=labels
+    )
+    disp.plot(ax=ax, cmap="Blues", colorbar=True)
+    ax.set_title("Confusion Matrix (with empty)")
+
+    cm_path = results_dir / "confusion_matrix_with_empty.png"
+    plt.savefig(cm_path, dpi=160, bbox_inches="tight")
+    plt.close()
+
+    print(f"✅ Confusion matrix saved to {cm_path}")
+
+    # -------------------------
+    # Save model
     # -------------------------
     if checkpoint_path is None:
         os.makedirs("checkpoints", exist_ok=True)
