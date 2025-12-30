@@ -20,8 +20,10 @@ def run_experiment(
     model_config,
     training_config,
     game_dir,
-    experiment_name
+    experiment_name,
+    checkpoint_path=None
 ):
+
     # -------------------------
     # Device
     # -------------------------
@@ -90,10 +92,14 @@ def run_experiment(
     # -------------------------
     # Save trained model
     # -------------------------
-    os.makedirs("checkpoints", exist_ok=True)
-    checkpoint_path = f"checkpoints/{experiment_name}.pth"
-    torch.save(model.state_dict(), checkpoint_path)
+    if checkpoint_path is None:
+        os.makedirs("checkpoints", exist_ok=True)
+        checkpoint_path = f"checkpoints/{experiment_name}.pth"
+    else:
+        os.makedirs(os.path.dirname(str(checkpoint_path)), exist_ok=True)
 
+    torch.save(model.state_dict(), checkpoint_path)
     print(f"\n✅ Model saved to {checkpoint_path}")
+
 
     return history
