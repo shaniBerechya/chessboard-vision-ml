@@ -137,49 +137,54 @@ class MLAutoEncoder(nn.Module):
         latent_dim: int,
         num_classes: int,
         in_channels: int,
-        backbone
+        backbone,
+        alpha=1.0,
+        beta=1.0
     ):
         super().__init__()
 
-        self.encoder = Encoder(latent_dim,backbone)
+        self.encoder = Encoder(latent_dim, backbone)
         self.decoder = Decoder(latent_dim, in_channels)
         self.classifier = ClassificationHead(latent_dim, num_classes)
 
-    def forward(self, x):
-        """
-        x: (B, C, H, W)
+        self.alpha = alpha
+        self.beta = beta
 
-        returns:
-            x_hat: reconstructed image
-            logits: class predictions
-            z: latent representation
-        """
+    def forward(self, x):
         z = self.encoder(x)
         x_hat = self.decoder(z)
         logits = self.classifier(z)
-
         return x_hat, logits, z
+
+    def compute_loss(self, x, outputs, labels):
+        x_hat, logits, _ = outputs
+        x_hat = F.interpolate(
+                        x_hat,
+                        size=x.shape[-2:],
+                        mode="bilinear",
+                        align_corners=False
+                    )
+
+        recon_loss = F.mse_loss(x_hat, x)
+        cls_loss = F.cross_entropy(logits, labels)
+
+        total = self.alpha * recon_loss + self.beta * cls_loss
+
+        return {
+            "total": total,
+            "recon": recon_loss,
+            "cls": cls_loss
+        }
 
 
 BASELINE_CONFIG = {
     "latent_dim": 256,
-    "num_classes": 12,
+    "num_classes": 13,
     "in_channels": 3,
-    "backbone": resnet18(weights=ResNet18_Weights.DEFAULT)
+    "backbone": resnet18(weights=ResNet18_Weights.DEFAULT),
+    "alpha": 1.0,
+    "beta": 1.0
 }
-
-
-def compute_loss(x, x_hat, logits, labels):
-    recon_loss = F.mse_loss(x_hat, x)
-    cls_loss = F.cross_entropy(logits, labels)
-
-    total_loss = ALPHA * recon_loss + BETA * cls_loss
-
-    return {
-        "total": total_loss,
-        "recon": recon_loss,
-        "cls": cls_loss
-    }
 
 def main():
     model = MLAutoEncoder(

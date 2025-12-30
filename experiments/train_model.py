@@ -45,19 +45,12 @@ class TrainModel:
             # Forward pass
             outputs = self.model(x)
 
-            # Compute loss
-            if self.loss_fn is not None:
-                # standard single-output loss
-                loss = self.loss_fn(outputs, y)
-            elif isinstance(outputs, dict) and "total" in outputs:
-                # support for models returning dict of losses
-                loss = outputs["total"]
-            elif isinstance(outputs, tuple) and y is not None:
-                # handle models returning multiple outputs like (x_hat, logits, z)
-                x_hat, logits, _ = outputs
-                loss = self.loss_fn(x_hat, logits, y)  # user must provide compatible fn
+            if hasattr(self.model, "compute_loss"):
+                losses = self.model.compute_loss(x, outputs, y)
+                loss = losses["total"]
             else:
-                raise ValueError("Cannot determine loss. Provide loss_fn or model returns dict with 'total'.")
+                loss = self.loss_fn(outputs, y)
+
 
             loss.backward()
             self.optimizer.step()
@@ -83,17 +76,11 @@ class TrainModel:
 
                 outputs = self.model(x)
 
-                if self.loss_fn is not None:
-                    if y is None:
-                        raise ValueError("loss_fn requires targets y")
-                    loss = self.loss_fn(outputs, y)
-                elif isinstance(outputs, dict) and "total" in outputs:
-                    loss = outputs["total"]
-                elif isinstance(outputs, tuple) and y is not None:
-                    x_hat, logits, _ = outputs
-                    loss = self.loss_fn(x_hat, logits, y)
+                if hasattr(self.model, "compute_loss"):
+                    losses = self.model.compute_loss(x, outputs, y)
+                    loss = losses["total"]
                 else:
-                    raise ValueError("Cannot determine loss. Provide loss_fn or model returns dict with 'total'.")
+                    loss = self.loss_fn(outputs, y)
 
                 running_loss += loss.item() * x.size(0)
 

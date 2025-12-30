@@ -11,7 +11,11 @@ def accuracy_fn(outputs, targets):
     """
     Simple classification accuracy
     """
-    preds = outputs.argmax(dim=1)
+    if isinstance(outputs, tuple):
+        _, logits, _ = outputs
+        preds = logits.argmax(dim=1)
+    else:
+        preds = outputs.argmax(dim=1)
     return (preds == targets).float().mean().item()
 
 
