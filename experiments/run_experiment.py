@@ -19,7 +19,8 @@ def run_experiment(
     model_cls,
     model_config,
     training_config,
-    game_dir
+    game_dir,
+    experiment_name
 ):
     # -------------------------
     # Device
@@ -52,15 +53,13 @@ def run_experiment(
     train_loader = DataLoader(
         train_dataset,
         batch_size=training_config["batch_size"],
-        shuffle=True,
-        num_workers=0
+        shuffle=True
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=training_config["batch_size"],
-        shuffle=False,
-        num_workers=0
+        shuffle=False
     )
 
     # -------------------------
@@ -92,6 +91,9 @@ def run_experiment(
     # Save trained model
     # -------------------------
     os.makedirs("checkpoints", exist_ok=True)
-    torch.save(model.state_dict(), "checkpoints/cnn_baseline.pth")
+    checkpoint_path = f"checkpoints/{experiment_name}.pth"
+    torch.save(model.state_dict(), checkpoint_path)
+
+    print(f"\n✅ Model saved to {checkpoint_path}")
 
     return history
