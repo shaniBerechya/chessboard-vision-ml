@@ -177,7 +177,7 @@ class MLAutoEncoder(nn.Module):
         }
 
 
-BASELINE_CONFIG = {
+ML_AE_BASELINE_CONFIG = {
     "latent_dim": 256,
     "num_classes": 13,
     "in_channels": 3,

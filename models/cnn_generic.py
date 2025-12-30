@@ -89,7 +89,7 @@ class CNNGeneric(nn.Module):
 # Baseline configuration
 # -------------------------------------------------
 
-BASELINE_CONFIG = {
+CNN_BASELINE_CONFIG = {
     "in_channels": 3,
     "conv_channels": [32, 64, 128],
     "input_size": 96,

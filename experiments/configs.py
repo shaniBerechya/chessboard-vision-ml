@@ -1,7 +1,7 @@
 import torch.nn as nn
 
-from models.cnn_generic import CNNGeneric, BASELINE_CONFIG
-from models.ml_ae_model import MLAutoEncoder, BASELINE_CONFIG
+from models.cnn_generic import CNNGeneric, CNN_BASELINE_CONFIG
+from models.ml_ae_model import MLAutoEncoder, ML_AE_BASELINE_CONFIG
 from models.dropout import Dropout, BASELINE_CONFIG as DROPOUT_BASELINE_CONFIG
 
 
