@@ -1,4 +1,6 @@
 import torch.nn as nn
+from torchvision.models import resnet18, ResNet18_Weights
+
 
 from models.cnn_generic import CNNGeneric
 from models.ml_ae_model import MLAutoEncoder

@@ -109,6 +109,9 @@ def create_samples_from_frame(
         - game_id
         - frame_id
     """
+    if not os.path.exists(image_path):
+        print(f"⚠️ Missing image: {image_path}")
+        return []
     patches = split_board_with_context(image_path, context_ratio)
     labels_2d = fen_to_board(fen)
 

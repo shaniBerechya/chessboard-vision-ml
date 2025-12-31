@@ -205,7 +205,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", "-e", default="cnn_baseline",
                         help=f"Experiment key from EXPERIMENTS. Options: {list(EXPERIMENTS.keys())}")
-    parser.add_argument( "--game_dirs",nargs="+",
+    parser.add_argument( "--game_dirs","-g",nargs="+",
         default=[
             "./data_base/game2_per_frame",
             "./data_base/game4_per_frame",
