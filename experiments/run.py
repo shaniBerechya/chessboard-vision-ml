@@ -205,8 +205,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", "-e", default="cnn_baseline",
                         help=f"Experiment key from EXPERIMENTS. Options: {list(EXPERIMENTS.keys())}")
-    parser.add_argument("--game_dir", "-g", default="./data_base/game2_per_frame",
-                        help="Game directory (per-frame dataset root).")
+    parser.add_argument( "--game_dirs",nargs="+",
+        default=[
+            "./data_base/game2_per_frame",
+            "./data_base/game4_per_frame",
+            "./data_base/game5_per_frame",
+            "./data_base/game6_per_frame",
+            "./data_base/game7_per_frame",
+        ],
+        help="List of game directories under data_base (default: games 2,4,5,6,7)"
+    )
     parser.add_argument("--output_root", "-o", default="results",
                         help="Root folder to store run artifacts.")
     parser.add_argument("--num_frames", type=int, default=10,
@@ -215,7 +223,6 @@ def main():
                         help="Seed for random frame sampling.")
     parser.add_argument("--show_plot", action="store_true",
                         help="Show the loss plot window at the end (plt.show).")
-    parser.add_argument("--game_dirs", nargs="+", help="List of game directories under data_base")
 
     args = parser.parse_args()
 
@@ -239,7 +246,7 @@ def main():
         model_cls=cfg["model_cls"],
         model_config=cfg["model_config"],
         training_config=cfg["training_config"],
-        game_dir=args.game_dir,
+        game_dirs=args.game_dirs,
         output_dir=run_dir,
     )
 

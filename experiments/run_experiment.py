@@ -16,7 +16,7 @@ def run_experiment(
     model_cls,
     model_config,
     training_config,
-    game_dir,
+    game_dirs,
     experiment_name,
     output_dir,
 ):
@@ -25,7 +25,9 @@ def run_experiment(
     # -------------------------
     # Dataset
     # -------------------------
-    samples = build_dataset_from_game(game_dir)
+    samples = []
+    for game_dir in game_dirs:
+        samples =+ build_dataset_from_game(game_dir)
     dataset = ChessSquareDataset(
         samples,
         image_size=training_config["image_size"]
