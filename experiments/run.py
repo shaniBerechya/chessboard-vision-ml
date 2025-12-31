@@ -215,6 +215,8 @@ def main():
                         help="Seed for random frame sampling.")
     parser.add_argument("--show_plot", action="store_true",
                         help="Show the loss plot window at the end (plt.show).")
+    parser.add_argument("--game_dirs", nargs="+", help="List of game directories under data_base")
+
     args = parser.parse_args()
 
     if args.experiment not in EXPERIMENTS:
