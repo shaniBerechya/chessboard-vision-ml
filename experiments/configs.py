@@ -21,7 +21,8 @@ EXPERIMENTS = {
             "epochs": 10,
             "batch_size": 32,
             "image_size": 96,
-            "loss_fn": nn.CrossEntropyLoss()
+            "loss_fn": nn.CrossEntropyLoss(),
+            "ood_threshold": 0.077
         }
     },
 
@@ -40,7 +41,8 @@ EXPERIMENTS = {
             "epochs": 10,
             "batch_size": 32,
             "image_size": 96,
-            "loss_fn": None # the loos func is a class method
+            "loss_fn": None, # the loos func is a class method
+            "ood_threshold": 0.077
         }
     },
 
@@ -58,7 +60,8 @@ EXPERIMENTS = {
             "epochs": 10,
             "batch_size": 32,
             "image_size": 96,
-            "loss_fn": nn.CrossEntropyLoss()
+            "loss_fn": nn.CrossEntropyLoss(),
+            "ood_threshold": 0.077
         }
     }
 }

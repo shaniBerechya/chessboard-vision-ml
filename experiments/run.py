@@ -105,7 +105,7 @@ def load_trained_model(model_cls, model_config: dict, checkpoint_path: Path):
     return model, device
 
 
-def predict_board_labels(model, device, image_path: Path, image_size: int) -> list[str]:
+def predict_board_labels(model, device, image_path: Path, image_size: int, ood_threshold: int=0.077) -> list[str]:
     patches = split_board_with_context(str(image_path))
     preds = []
 
@@ -115,8 +115,11 @@ def predict_board_labels(model, device, image_path: Path, image_size: int) -> li
             tensor = torch.from_numpy(patch).permute(2, 0, 1).float() / 255.0
             tensor = tensor.unsqueeze(0).to(device)
             logits = model(tensor)
-            pred_idx = int(logits.argmax(dim=1).item())
-            preds.append(INDEX_TO_LABEL.get(pred_idx, str(pred_idx)))
+            if logits.argmax(dim=1) < ood_threshold:
+                pred_idx = int(logits.argmax(dim=1).item())
+                preds.append(INDEX_TO_LABEL.get(pred_idx, str(pred_idx)))
+            else:
+                preds.append('unknown')
 
     return preds
 
@@ -182,7 +185,7 @@ def save_qualitative_full_frames(
     all_preds = {}
     for p in chosen:
         frame_name = p.name
-        preds = predict_board_labels(model, device, p, image_size=image_size)
+        preds = predict_board_labels(model, device, p, image_size=image_size, ood_threshold=ood_threshold)
         all_preds[frame_name] = preds
 
         shutil.copy2(p, orig_dir / frame_name)
@@ -278,6 +281,7 @@ def main():
         image_size=cfg["training_config"]["image_size"],
         n_frames=args.num_frames,
         seed=args.seed,
+        ood_threshold=cfg["training_config"]["ood_threshold"]
     )
 
     print("✅ Experiment finished successfully")
