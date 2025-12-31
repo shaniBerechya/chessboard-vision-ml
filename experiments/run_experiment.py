@@ -24,6 +24,35 @@ def collect_preds_targets(model, device, loader):
             all_targets.append(y.cpu().numpy())
     return np.concatenate(all_preds), np.concatenate(all_targets)
 
+# --------------------------------------------------
+# Accuracy functions
+# --------------------------------------------------
+def accuracy_all_fn(outputs, targets):
+    preds = outputs.argmax(dim=1)
+    return (preds == targets).float().mean().item()
+
+
+def accuracy_no_empty_fn(outputs, targets):
+    preds = outputs.argmax(dim=1)
+    empty_idx = LABEL_TO_INDEX["empty"]
+    mask = targets != empty_idx
+    if mask.sum() == 0:
+        return 0.0
+    return (preds[mask] == targets[mask]).float().mean().item()
+
+
+def accuracy_only_pieces_fn(outputs, targets):
+    preds = outputs.argmax(dim=1)
+    empty_idx = LABEL_TO_INDEX["empty"]
+    mask = targets != empty_idx
+    if mask.sum() == 0:
+        return 0.0
+    return (preds[mask] == targets[mask]).float().mean().item()
+
+
+# --------------------------------------------------
+# Run experiment
+# --------------------------------------------------
 def run_experiment(
     model_cls,
     model_config,
@@ -100,13 +129,21 @@ def run_experiment(
    
     best_ckpt_path = str(Path(output_dir) / "model_best.pth")
 
+    # -------------------------
+    # Training + metrics
+    # -------------------------
     history = trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
         epochs=training_config["epochs"],
         metric_fn=None,
         early_stopping=training_config.get("early_stopping", None),
-        checkpoint_path=best_ckpt_path
+        checkpoint_path=best_ckpt_path,
+        metric_fns={
+            "accuracy_all": accuracy_all_fn,
+            "accuracy_no_empty": accuracy_no_empty_fn,
+            "accuracy_only_pieces": accuracy_only_pieces_fn,
+        }
     )
 
     # -------------------------
@@ -152,6 +189,11 @@ def run_experiment(
     # -------------------------
     labels = list(LABEL_TO_INDEX.keys())
     label_ids = list(range(len(labels)))
+    cm = confusion_matrix(
+        all_targets,
+        all_preds,
+        labels=list(range(len(labels)))
+    )
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
