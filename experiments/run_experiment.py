@@ -50,7 +50,7 @@ def run_experiment(
     )
 
     # -------------------------
-    # Model
+    # Model + Trainer
     # -------------------------
     model = model_cls(**model_config).to(device)
 
@@ -61,9 +61,6 @@ def run_experiment(
         loss_fn=training_config["loss_fn"]
     )
 
-    # -------------------------
-    # Training
-    # -------------------------
     history = trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
@@ -92,6 +89,27 @@ def run_experiment(
     all_preds = np.concatenate(all_preds)
     all_targets = np.concatenate(all_targets)
 
+    # -------------------------
+    # Accuracy metrics
+    # -------------------------
+    empty_idx = LABEL_TO_INDEX["empty"]
+
+    acc_all = (all_preds == all_targets).mean()
+
+    mask_no_empty = all_targets != empty_idx
+    acc_no_empty = (all_preds[mask_no_empty] == all_targets[mask_no_empty]).mean()
+
+    mask_only_pieces = (all_targets != empty_idx)
+    acc_only_pieces = (all_preds[mask_only_pieces] == all_targets[mask_only_pieces]).mean()
+
+    # Add to history (as lists, to match epochs-based structure)
+    history["accuracy_all"] = [float(acc_all)]
+    history["accuracy_no_empty"] = [float(acc_no_empty)]
+    history["accuracy_only_pieces"] = [float(acc_only_pieces)]
+
+    # -------------------------
+    # Confusion matrix
+    # -------------------------
     labels = list(LABEL_TO_INDEX.keys())
 
     cm = confusion_matrix(
@@ -100,9 +118,6 @@ def run_experiment(
         labels=list(range(len(labels)))
     )
 
-    # -------------------------
-    # Save confusion matrix INSIDE run_dir
-    # -------------------------
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -121,7 +136,7 @@ def run_experiment(
     print(f"✅ Confusion matrix saved to {cm_path}")
 
     # -------------------------
-    # Save model INSIDE run_dir
+    # Save model
     # -------------------------
     ckpt_path = output_dir / "model.pth"
     torch.save(model.state_dict(), ckpt_path)
