@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+
 class TrainModel:
     def __init__(
         self,
@@ -12,37 +13,25 @@ class TrainModel:
         optimizer_cls=torch.optim.Adam,
         loss_fn=None
     ):
-        """
-        Generic trainer for any PyTorch model.
-
-        Args:
-            model: PyTorch model to train
-            device: torch.device ('cuda' or 'cpu')
-            lr: learning rate
-            optimizer_cls: optimizer class (Adam, SGD, etc.)
-            loss_fn: loss function, can be None if model returns dict of losses
-        """
-        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu"
+        )
         self.model = model.to(self.device)
         self.optimizer = optimizer_cls(model.parameters(), lr=lr)
         self.loss_fn = loss_fn
 
+    # --------------------------------------------------
+    # Train one epoch
+    # --------------------------------------------------
     def train_epoch(self, dataloader: DataLoader):
         self.model.train()
         running_loss = 0.0
 
-        for batch in tqdm(dataloader, desc="Training"):
-            # Unpack batch: support (x, y) or just x
-            if len(batch) == 2:
-                x, y = batch
-                x, y = x.to(self.device), y.to(self.device)
-            else:
-                x = batch[0].to(self.device)
-                y = None
+        for x, y in tqdm(dataloader, desc="Training"):
+            x = x.to(self.device)
+            y = y.to(self.device)
 
             self.optimizer.zero_grad()
-
-            # Forward pass
             outputs = self.model(x)
 
             if hasattr(self.model, "compute_loss"):
@@ -51,28 +40,27 @@ class TrainModel:
             else:
                 loss = self.loss_fn(outputs, y)
 
-
             loss.backward()
             self.optimizer.step()
 
             running_loss += loss.item() * x.size(0)
 
-        epoch_loss = running_loss / len(dataloader.dataset)
-        return epoch_loss
+        return running_loss / len(dataloader.dataset)
 
-    def evaluate(self, dataloader: DataLoader, metric_fn=None):
+    # --------------------------------------------------
+    # Evaluate (loss + metrics)
+    # --------------------------------------------------
+    def evaluate(self, dataloader: DataLoader, metric_fns=None):
         self.model.eval()
         running_loss = 0.0
-        metric_total = 0.0
+
+        metric_fns = metric_fns or {}
+        metric_sums = {name: 0.0 for name in metric_fns}
 
         with torch.no_grad():
-            for batch in tqdm(dataloader, desc="Evaluating"):
-                if len(batch) == 2:
-                    x, y = batch
-                    x, y = x.to(self.device), y.to(self.device)
-                else:
-                    x = batch[0].to(self.device)
-                    y = None
+            for x, y in tqdm(dataloader, desc="Evaluating"):
+                x = x.to(self.device)
+                y = y.to(self.device)
 
                 outputs = self.model(x)
 
@@ -84,37 +72,53 @@ class TrainModel:
 
                 running_loss += loss.item() * x.size(0)
 
-                if metric_fn is not None and y is not None:
-                    metric_total += metric_fn(outputs, y) * x.size(0)
+                for name, fn in metric_fns.items():
+                    metric_sums[name] += fn(outputs, y) * x.size(0)
 
         avg_loss = running_loss / len(dataloader.dataset)
-        avg_metric = None
-        if metric_fn is not None:
-            avg_metric = metric_total / len(dataloader.dataset)
+        avg_metrics = {
+            name: metric_sums[name] / len(dataloader.dataset)
+            for name in metric_sums
+        }
 
-        return avg_loss, avg_metric
+        return avg_loss, avg_metrics
 
+    # --------------------------------------------------
+    # Fit
+    # --------------------------------------------------
     def fit(
         self,
         train_loader: DataLoader,
         val_loader: DataLoader = None,
         epochs: int = 10,
-        metric_fn=None
+        metric_fns: dict | None = None
     ):
-        history = {"train_loss": [], "val_loss": [], "val_metric": []}
+        metric_fns = metric_fns or {}
+
+        history = {
+            "train_loss": [],
+            "val_loss": [],
+        }
+
+        for name in metric_fns:
+            history[name] = []
 
         for epoch in range(epochs):
-            print(f"\nEpoch {epoch+1}/{epochs}")
+            print(f"\nEpoch {epoch + 1}/{epochs}")
+
             train_loss = self.train_epoch(train_loader)
-            print(f"Train Loss: {train_loss:.4f}")
             history["train_loss"].append(train_loss)
+            print(f"Train Loss: {train_loss:.4f}")
 
             if val_loader is not None:
-                val_loss, val_metric = self.evaluate(val_loader, metric_fn=metric_fn)
-                print(f"Val Loss: {val_loss:.4f}")
-                if val_metric is not None:
-                    print(f"Val Metric: {val_metric:.4f}")
-                    history["val_metric"].append(val_metric)
+                val_loss, val_metrics = self.evaluate(
+                    val_loader, metric_fns=metric_fns
+                )
                 history["val_loss"].append(val_loss)
+                print(f"Val Loss: {val_loss:.4f}")
+
+                for name, value in val_metrics.items():
+                    history[name].append(value)
+                    print(f"{name}: {value:.4f}")
 
         return history

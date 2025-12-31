@@ -12,6 +12,35 @@ from data_pros.chess_dataset import ChessSquareDataset, LABEL_TO_INDEX
 from experiments.train_model import TrainModel
 
 
+# --------------------------------------------------
+# Accuracy functions
+# --------------------------------------------------
+def accuracy_all_fn(outputs, targets):
+    preds = outputs.argmax(dim=1)
+    return (preds == targets).float().mean().item()
+
+
+def accuracy_no_empty_fn(outputs, targets):
+    preds = outputs.argmax(dim=1)
+    empty_idx = LABEL_TO_INDEX["empty"]
+    mask = targets != empty_idx
+    if mask.sum() == 0:
+        return 0.0
+    return (preds[mask] == targets[mask]).float().mean().item()
+
+
+def accuracy_only_pieces_fn(outputs, targets):
+    preds = outputs.argmax(dim=1)
+    empty_idx = LABEL_TO_INDEX["empty"]
+    mask = targets != empty_idx
+    if mask.sum() == 0:
+        return 0.0
+    return (preds[mask] == targets[mask]).float().mean().item()
+
+
+# --------------------------------------------------
+# Run experiment
+# --------------------------------------------------
 def run_experiment(
     model_cls,
     model_config,
@@ -61,15 +90,22 @@ def run_experiment(
         loss_fn=training_config["loss_fn"]
     )
 
+    # -------------------------
+    # Training + metrics
+    # -------------------------
     history = trainer.fit(
         train_loader=train_loader,
         val_loader=val_loader,
         epochs=training_config["epochs"],
-        metric_fn=None
+        metric_fns={
+            "accuracy_all": accuracy_all_fn,
+            "accuracy_no_empty": accuracy_no_empty_fn,
+            "accuracy_only_pieces": accuracy_only_pieces_fn,
+        }
     )
 
     # -------------------------
-    # Validation predictions
+    # Confusion matrix (final val)
     # -------------------------
     model.eval()
     all_preds = []
@@ -89,29 +125,7 @@ def run_experiment(
     all_preds = np.concatenate(all_preds)
     all_targets = np.concatenate(all_targets)
 
-    # -------------------------
-    # Accuracy metrics
-    # -------------------------
-    empty_idx = LABEL_TO_INDEX["empty"]
-
-    acc_all = (all_preds == all_targets).mean()
-
-    mask_no_empty = all_targets != empty_idx
-    acc_no_empty = (all_preds[mask_no_empty] == all_targets[mask_no_empty]).mean()
-
-    mask_only_pieces = (all_targets != empty_idx)
-    acc_only_pieces = (all_preds[mask_only_pieces] == all_targets[mask_only_pieces]).mean()
-
-    # Add to history (as lists, to match epochs-based structure)
-    history["accuracy_all"] = [float(acc_all)]
-    history["accuracy_no_empty"] = [float(acc_no_empty)]
-    history["accuracy_only_pieces"] = [float(acc_only_pieces)]
-
-    # -------------------------
-    # Confusion matrix
-    # -------------------------
     labels = list(LABEL_TO_INDEX.keys())
-
     cm = confusion_matrix(
         all_targets,
         all_preds,
