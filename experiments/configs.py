@@ -22,7 +22,11 @@ EXPERIMENTS = {
             "batch_size": 32,
             "image_size": 96,
             "loss_fn": nn.CrossEntropyLoss(),
-            "ood_threshold": 0.077
+            "ood_threshold": 0.077,
+            #     "train_split": 0.6,
+            #     "val_split": 0.2,
+            #     "test_split": 0.2,
+            #     "split_seed": 42,
         }
     },
 
@@ -42,7 +46,11 @@ EXPERIMENTS = {
             "batch_size": 32,
             "image_size": 96,
             "loss_fn": None, # the loos func is a class method
-            "ood_threshold": 0.077
+            "ood_threshold": 0.077,
+            #     "train_split": 0.6,
+            #     "val_split": 0.2,
+            #     "test_split": 0.2,
+            #     "split_seed": 42,
         }
     },
 
@@ -55,13 +63,25 @@ EXPERIMENTS = {
                 "dropout_p": 0.3,
                 "hidden_dim": 256
         },
-        "training_config": {
+       "training_config": {
             "lr": 1e-3,
             "epochs": 10,
             "batch_size": 32,
             "image_size": 96,
             "loss_fn": nn.CrossEntropyLoss(),
-            "ood_threshold": 0.077
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
+            "early_stopping": {
+                "enabled": True,
+                "monitor": "val_loss",
+                "patience": 5,
+                "min_delta": 1e-4,
+                "restore_best": True
+            }
         }
+
     }
 }

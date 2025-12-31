@@ -99,10 +99,57 @@ class TrainModel:
         train_loader: DataLoader,
         val_loader: DataLoader = None,
         epochs: int = 10,
-        metric_fn=None
+        metric_fn=None,
+        # NEW: early stopping config
+        early_stopping: dict | None = None,
+        # NEW: optional checkpoint path for best model
+        checkpoint_path: str | None = None,
     ):
+        """
+        Trains the model for up to `epochs`, with optional Early Stopping.
+
+        early_stopping dict options:
+        - enabled: bool (default False)
+        - monitor: str ("val_loss" or "val_metric"), default "val_loss"
+        - mode: str ("min" or "max"), default inferred from monitor
+        - patience: int, default 5
+        - min_delta: float, default 0.0
+        - restore_best: bool, default True
+        """
+
         history = {"train_loss": [], "val_loss": [], "val_metric": []}
 
+        # -------------------------
+        # Early stopping setup
+        # -------------------------
+        es = early_stopping or {}
+        es_enabled = bool(es.get("enabled", False)) and (val_loader is not None)
+
+        monitor = es.get("monitor", "val_loss")
+        patience = int(es.get("patience", 5))
+        min_delta = float(es.get("min_delta", 0.0))
+        restore_best = bool(es.get("restore_best", True))
+
+        # infer default mode
+        if "mode" in es:
+            mode = es["mode"]
+        else:
+            mode = "min" if monitor == "val_loss" else "max"
+
+        best_score = None
+        best_state_dict = None
+        best_epoch = None
+        bad_epochs = 0
+
+        def is_improvement(score, best):
+            if mode == "min":
+                return score < (best - min_delta)
+            else:
+                return score > (best + min_delta)
+
+        # -------------------------
+        # Training loop
+        # -------------------------
         for epoch in range(epochs):
             print(f"\nEpoch {epoch+1}/{epochs}")
             train_loss = self.train_epoch(train_loader)
@@ -112,9 +159,56 @@ class TrainModel:
             if val_loader is not None:
                 val_loss, val_metric = self.evaluate(val_loader, metric_fn=metric_fn)
                 print(f"Val Loss: {val_loss:.4f}")
+                history["val_loss"].append(val_loss)
+
                 if val_metric is not None:
                     print(f"Val Metric: {val_metric:.4f}")
                     history["val_metric"].append(val_metric)
-                history["val_loss"].append(val_loss)
+
+                # -------------------------
+                # Early stopping step
+                # -------------------------
+                if es_enabled:
+                    if monitor == "val_loss":
+                        current = val_loss
+                    elif monitor == "val_metric":
+                        # אם אין metric_fn, val_metric יהיה None -> אי אפשר לנטר אותו
+                        if val_metric is None:
+                            raise ValueError("EarlyStopping monitor='val_metric' requires metric_fn to be provided.")
+                        current = val_metric
+                    else:
+                        raise ValueError(f"Unknown early_stopping.monitor='{monitor}'. Use 'val_loss' or 'val_metric'.")
+
+                    if best_score is None:
+                        best_score = current
+                        best_epoch = epoch
+                        if restore_best:
+                            best_state_dict = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()}
+                        if checkpoint_path is not None:
+                            torch.save(self.model.state_dict(), checkpoint_path)
+                    else:
+                        if is_improvement(current, best_score):
+                            best_score = current
+                            best_epoch = epoch
+                            bad_epochs = 0
+                            if restore_best:
+                                best_state_dict = {k: v.detach().cpu().clone() for k, v in self.model.state_dict().items()}
+                            if checkpoint_path is not None:
+                                torch.save(self.model.state_dict(), checkpoint_path)
+                            print(f"EarlyStopping: improvement. best_{monitor}={best_score:.6f} at epoch {best_epoch+1}")
+                        else:
+                            bad_epochs += 1
+                            print(f"EarlyStopping: no improvement. bad_epochs={bad_epochs}/{patience}")
+
+                            if bad_epochs >= patience:
+                                print(
+                                    f"EarlyStopping TRIGGERED. "
+                                    f"Best epoch: {best_epoch+1}, best_{monitor}: {best_score:.6f}"
+                                )
+                                # restore best weights if requested
+                                if restore_best and best_state_dict is not None:
+                                    self.model.load_state_dict(best_state_dict)
+                                    print("EarlyStopping: restored best model weights in-memory.")
+                                break
 
         return history

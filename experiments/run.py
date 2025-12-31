@@ -259,10 +259,25 @@ def main():
         "model_class": cfg["model_cls"].__name__,
         "model_config": sanitize_model_config(cfg["model_config"]),
         "training_config": sanitize_training_config(cfg["training_config"]),
-        "game_dir": args.game_dir,
+        "game_dirs": args.game_dirs,
         "checkpoint_path": str(checkpoint_path),
         "seed": args.seed,
     }
+    
+    metadata["splits"] = {
+        "train_split": cfg["training_config"].get("train_split", 0.6),
+        "val_split": cfg["training_config"].get("val_split", 0.2),
+        "test_split": cfg["training_config"].get("test_split", 0.2),
+        "split_seed": cfg["training_config"].get("split_seed", 42),
+    }
+
+    metadata["test_results"] = {
+        "accuracy_all": history.get("test_accuracy_all", [None])[-1],
+        "accuracy_no_empty": history.get("test_accuracy_no_empty", [None])[-1],
+        "accuracy_only_pieces": history.get("test_accuracy_only_pieces", [None])[-1],
+        "artifacts": history.get("artifacts", {}),
+    }
+
 
     with open(run_dir / "config.json", "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)
@@ -273,7 +288,7 @@ def main():
     plot_error_curves(history, save_path=run_dir / "loss_curve.png", show=args.show_plot)
 
     save_qualitative_full_frames(
-        game_dir=args.game_dir,
+        game_dir=args.game_dirs[0],
         out_dir=run_dir / "qualitative_full_frames",
         model_cls=cfg["model_cls"],
         model_config=cfg["model_config"],
