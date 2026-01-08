@@ -11,6 +11,18 @@ from data_pros.data_preprocessing import build_dataset_from_game
 from data_pros.chess_dataset import ChessSquareDataset, LABEL_TO_INDEX
 from experiments.train_model import TrainModel
 
+
+# for ml_ae
+def output_to_logist(outputs):
+    if isinstance(outputs, (tuple, list)):
+        logits = outputs[1]
+    elif isinstance(outputs, dict):
+        logits = outputs["logits"]
+    else:
+        logits = outputs
+    return logits
+
+
 def collect_preds_targets(model, device, loader):
     model.eval()
     all_preds, all_targets = [], []
@@ -18,7 +30,8 @@ def collect_preds_targets(model, device, loader):
         for x, y in loader:
             x = x.to(device)
             y = y.to(device)
-            logits = model(x)
+            outputs = model(x)
+            logits = output_to_logist(outputs)
             preds = logits.argmax(dim=1)
             all_preds.append(preds.cpu().numpy())
             all_targets.append(y.cpu().numpy())
@@ -28,12 +41,14 @@ def collect_preds_targets(model, device, loader):
 # Accuracy functions
 # --------------------------------------------------
 def accuracy_all_fn(outputs, targets):
-    preds = outputs.argmax(dim=1)
+    logits = output_to_logist(outputs)
+    preds = logits.argmax(dim=1)
     return (preds == targets).float().mean().item()
 
 
 def accuracy_no_empty_fn(outputs, targets):
-    preds = outputs.argmax(dim=1)
+    logits = output_to_logist(outputs)
+    preds = logits.argmax(dim=1)
     empty_idx = LABEL_TO_INDEX["empty"]
     mask = targets != empty_idx
     if mask.sum() == 0:
@@ -42,7 +57,8 @@ def accuracy_no_empty_fn(outputs, targets):
 
 
 def accuracy_only_pieces_fn(outputs, targets):
-    preds = outputs.argmax(dim=1)
+    logits = output_to_logist(outputs)
+    preds = logits.argmax(dim=1)
     empty_idx = LABEL_TO_INDEX["empty"]
     mask = targets != empty_idx
     if mask.sum() == 0:
@@ -126,7 +142,7 @@ def run_experiment(
         loss_fn=training_config["loss_fn"]
     )
 
-   
+
     best_ckpt_path = str(Path(output_dir) / "model_best.pth")
 
     # -------------------------
@@ -190,10 +206,11 @@ def run_experiment(
     labels = list(LABEL_TO_INDEX.keys())
     label_ids = list(range(len(labels)))
     cm = confusion_matrix(
-        all_targets,
-        all_preds,
-        labels=list(range(len(labels)))
+    test_targets,
+    test_preds,
+    labels=list(range(len(labels)))
     )
+
 
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)

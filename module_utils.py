@@ -94,3 +94,14 @@ def build_model_conv(
         layers.append(output_activation())
 
     return nn.Sequential(*layers)
+
+
+# for ml_ae
+def output_to_logits(outputs):
+    if isinstance(outputs, (tuple, list)):
+        logits = outputs[1]
+    elif isinstance(outputs, dict):
+        logits = outputs["logits"]
+    else:
+        logits = outputs
+    return logits

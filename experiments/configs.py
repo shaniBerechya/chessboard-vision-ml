@@ -26,31 +26,36 @@ EXPERIMENTS = {
         "training_config": {
             "lr": 1e-3,
             "epochs": 10,
-            "batch_size": 32,
+            "batch_size": 64,
             "image_size": 96,
             "loss_fn": nn.CrossEntropyLoss(),
             "ood_threshold": 0.077,
-            #     "train_split": 0.6,
-            #     "val_split": 0.2,
-            #     "test_split": 0.2,
-            #     "split_seed": 42,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
         }
     },
 
     "cnn_weighted_loss": {
         "model_cls": CNNGeneric,
         "model_config": CNN_BASELINE_MODEL_CONFIG,
-        "training_config": {
+                "training_config": {
             "lr": 1e-3,
             "epochs": 10,
-            "batch_size": 32,
+            "batch_size": 64,
             "image_size": 96,
             "loss_fn": nn.CrossEntropyLoss(
                 weight=torch.tensor(
                     [0.2] + [1.0] * 12,
                     dtype=torch.float
                 )
-            )
+            ),
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
         }
     },
 
@@ -66,7 +71,7 @@ EXPERIMENTS = {
         },
         "training_config": {
             "lr": 1e-3,
-            "epochs": 10,
+            "epochs": 1,
             "batch_size": 32,
             "image_size": 96,
             "loss_fn": None, # the loos func is a class method
@@ -86,11 +91,42 @@ EXPERIMENTS = {
             "freeze_backbone": False
         },
         "training_config": {
-            "lr": 1e-4,          # חשוב: נמוך יותר!
+            "lr": 1e-4,
             "epochs": 10,
-            "batch_size": 32,
+            "batch_size": 64,
             "image_size": 96,
-            "loss_fn": nn.CrossEntropyLoss()
+            "loss_fn": nn.CrossEntropyLoss(),
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
+        }
+    },
+
+    "resnet18_weighted_loss": {
+        "model_cls": ResNetClassifier,
+        "model_config": {
+            "num_classes": 13,
+            "pretrained": True,
+            "freeze_backbone": False
+        },
+        "training_config": {
+            "lr": 1e-4,
+            "epochs": 10,
+            "batch_size": 64,
+            "image_size": 96,
+            "loss_fn": nn.CrossEntropyLoss(
+                weight=torch.tensor(
+                    [0.2] + [1.0] * 12,
+                    dtype=torch.float
+                )
+            ),
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
         }
     },
 
@@ -124,5 +160,5 @@ EXPERIMENTS = {
         }
 
     }
-    
+
 }

@@ -17,6 +17,16 @@ from experiments.run_experiment import run_experiment
 from data_pros.data_preprocessing import split_board_with_context
 from data_pros.chess_dataset import LABEL_TO_INDEX
 
+# for ml_ae
+def output_to_logist(outputs):
+    if isinstance(outputs, (tuple, list)):
+        logits = outputs[1]
+    elif isinstance(outputs, dict):
+        logits = outputs["logits"]
+    else:
+        logits = outputs
+    return logits
+
 
 INDEX_TO_LABEL = {v: k for k, v in LABEL_TO_INDEX.items()}
 
@@ -114,7 +124,8 @@ def predict_board_labels(model, device, image_path: Path, image_size: int, ood_t
             patch = cv2.resize(patch, (image_size, image_size))
             tensor = torch.from_numpy(patch).permute(2, 0, 1).float() / 255.0
             tensor = tensor.unsqueeze(0).to(device)
-            logits = model(tensor)
+            outputs = model(tensor)
+            logits = output_to_logist(outputs)
             if logits.argmax(dim=1) < ood_threshold:
                 pred_idx = int(logits.argmax(dim=1).item())
                 preds.append(INDEX_TO_LABEL.get(pred_idx, str(pred_idx)))
@@ -163,6 +174,7 @@ def save_qualitative_full_frames(
     image_size: int,
     n_frames: int = 10,
     seed: int = 42,
+    ood_threshold: int = 0.07
 ):
     random.seed(seed)
 
@@ -263,7 +275,7 @@ def main():
         "checkpoint_path": str(checkpoint_path),
         "seed": args.seed,
     }
-    
+
     metadata["splits"] = {
         "train_split": cfg["training_config"].get("train_split", 0.6),
         "val_split": cfg["training_config"].get("val_split", 0.2),
