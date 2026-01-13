@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 1. Configure the model:
 Open the experiments/configs.py file and select the model and training configuration:
-
+```json
 EXPERIMENTS = {
     "<model_name>": {
         "model_cls": <model_class>,
@@ -79,7 +79,7 @@ EXPERIMENTS = {
         }
     }
 }
-
+```
 
 You can modify the model_config or training_config to experiment with different architectures, learning rates, or epochs.
 
