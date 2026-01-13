@@ -1,6 +1,6 @@
 # Chessboard Square Classification and Board-State Reconstruction
 
-This repository implements a system for **classifying each square of a chessboard** in real images and reconstructing the board state in **FEN notation**. The project handles occlusions using an Out-of-Distribution approach and is robust to unseen games.
+This repository implements a system for **classifying each square of a chessboard** in real images and reconstructing the board state in **FEN notation**. 
 
 ---
 
