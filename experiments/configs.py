@@ -142,7 +142,7 @@ EXPERIMENTS = {
             "image_size": 96,
             "loss_fn": nn.CrossEntropyLoss(
                 weight=torch.tensor(
-                    [0.2] + [1.0] * 12,
+                    [1.0] * 12 + [0.2],
                     dtype=torch.float
                 )
             ),
