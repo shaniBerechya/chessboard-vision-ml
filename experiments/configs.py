@@ -59,6 +59,30 @@ EXPERIMENTS = {
         }
     },
 
+    "ml_ae_weighted": {
+        "model_cls": MLAutoEncoder,
+        "model_config": {
+            "latent_dim": 256,
+            "num_classes": 13,
+            "in_channels": 3,
+            "backbone": resnet18(weights=ResNet18_Weights.DEFAULT),
+            "alpha": 1.0,
+            "beta": 1.0
+        },
+        "training_config": {
+            "lr": 1e-3,
+            "epochs": 10,
+            "batch_size": 64,
+            "image_size": 96,
+            "loss_fn": None, # the loos func is a class method
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+                "split_seed": 42,
+        }
+    },
+
     "ml_ae": {
         "model_cls": MLAutoEncoder,
         "model_config": {
@@ -71,15 +95,15 @@ EXPERIMENTS = {
         },
         "training_config": {
             "lr": 1e-3,
-            "epochs": 1,
-            "batch_size": 32,
+            "epochs": 10,
+            "batch_size": 64,
             "image_size": 96,
             "loss_fn": None, # the loos func is a class method
             "ood_threshold": 0.077,
-            #     "train_split": 0.6,
-            #     "val_split": 0.2,
-            #     "test_split": 0.2,
-            #     "split_seed": 42,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+                "split_seed": 42,
         }
     },
 
@@ -130,7 +154,7 @@ EXPERIMENTS = {
         }
     },
 
-    "dropout": {
+    "dropout_resnet18__03": {
         "model_cls": Dropout,
         "model_config": {
             "backbone_name": "resnet18",
@@ -142,7 +166,7 @@ EXPERIMENTS = {
        "training_config": {
             "lr": 1e-3,
             "epochs": 10,
-            "batch_size": 32,
+            "batch_size": 64,
             "image_size": 96,
             "loss_fn": nn.CrossEntropyLoss(),
             "ood_threshold": 0.077,
@@ -158,7 +182,74 @@ EXPERIMENTS = {
                 "restore_best": True
             }
         }
-
+    },
+    "dropout_resnet18_weighted_03": {
+        "model_cls": Dropout,
+        "model_config": {
+            "backbone_name": "resnet18",
+            "num_classes": 13,
+            "pretrained": True,
+            "dropout_p": 0.3,
+            "hidden_dim": 256
+        },
+       "training_config": {
+            "lr": 1e-3,
+            "epochs": 10,
+            "batch_size": 64,
+            "image_size": 96,
+            "loss_fn": nn.CrossEntropyLoss(
+                weight=torch.tensor(
+                    [0.2] + [1.0] * 12,
+                    dtype=torch.float
+                )
+            ),
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
+            "early_stopping": {
+                "enabled": True,
+                "monitor": "val_loss",
+                "patience": 5,
+                "min_delta": 1e-4,
+                "restore_best": True
+            }
+        }
+    },
+    "dropout_resnet18_weighted_01": {
+        "model_cls": Dropout,
+        "model_config": {
+            "backbone_name": "resnet18",
+            "num_classes": 13,
+            "pretrained": True,
+            "dropout_p": 0.1,
+            "hidden_dim": 256
+        },
+       "training_config": {
+            "lr": 1e-3,
+            "epochs": 10,
+            "batch_size": 64,
+            "image_size": 96,
+            "loss_fn": nn.CrossEntropyLoss(
+                weight=torch.tensor(
+                    [0.2] + [1.0] * 12,
+                    dtype=torch.float
+                )
+            ),
+            "ood_threshold": 0.077,
+            "train_split": 0.6,
+            "val_split": 0.2,
+            "test_split": 0.2,
+            "split_seed": 42,
+            "early_stopping": {
+                "enabled": True,
+                "monitor": "val_loss",
+                "patience": 5,
+                "min_delta": 1e-4,
+                "restore_best": True
+            }
+        }
     }
 
 }

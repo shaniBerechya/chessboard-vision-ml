@@ -166,7 +166,9 @@ class MLAutoEncoder(nn.Module):
                     )
 
         recon_loss = F.mse_loss(x_hat, x)
-        cls_loss = F.cross_entropy(logits, labels)
+        cls_criterion = nn.CrossEntropyLoss(weight=torch.tensor([0.2] + [1.0] * 12, dtype=torch.float, device=logits.device))
+
+        cls_loss = cls_criterion(logits, labels)
 
         total = self.alpha * recon_loss + self.beta * cls_loss
 

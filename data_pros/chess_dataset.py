@@ -3,12 +3,24 @@ from torch.utils.data import Dataset
 import cv2
 import numpy as np
 
-# Label mapping (shared, deterministic)
 LABEL_TO_INDEX = {
-    "empty": 0,
-    "wp": 1, "wn": 2, "wb": 3, "wr": 4, "wq": 5, "wk": 6,
-    "bp": 7, "bn": 8, "bb": 9, "br": 10, "bq": 11, "bk": 12
+    "wp": 0,   # White Pawn
+    "wr": 1,   # White Rook
+    "wn": 2,   # White Knight
+    "wb": 3,   # White Bishop
+    "wq": 4,   # White Queen
+    "wk": 5,   # White King
+
+    "bp": 6,   # Black Pawn
+    "br": 7,   # Black Rook
+    "bn": 8,   # Black Knight
+    "bb": 9,   # Black Bishop
+    "bq": 10,  # Black Queen
+    "bk": 11,  # Black King
+
+    "empty": 12  # Empty / OOD / Unknown
 }
+
 
 class ChessSquareDataset(Dataset):
     """
