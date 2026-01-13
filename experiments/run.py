@@ -126,7 +126,7 @@ def predict_board_labels(model, device, image_path: Path, image_size: int, ood_t
             tensor = tensor.unsqueeze(0).to(device)
             outputs = model(tensor)
             logits = output_to_logist(outputs)
-            if logits.argmax(dim=1) < ood_threshold:
+            if logits.argmax(dim=1) > ood_threshold:
                 pred_idx = int(logits.argmax(dim=1).item())
                 preds.append(INDEX_TO_LABEL.get(pred_idx, str(pred_idx)))
             else:
