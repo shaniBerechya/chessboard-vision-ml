@@ -28,6 +28,7 @@ The project uses **CNN-based models** and can optionally leverage additional dat
 ## Environment Setup and Requirements
 
 Install the Python dependencies:
+
 **Windows:**
 
 ```bash
