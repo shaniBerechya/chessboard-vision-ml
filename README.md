@@ -28,14 +28,26 @@ The project uses **CNN-based models** and can optionally leverage additional dat
 ## Environment Setup and Requirements
 
 Install the Python dependencies:
+**Windows:**
 
 ```bash
 
-git clone <your-repo-url>
+git clone (https://github.com/shaniBerechya/chessboard-vision-ml.git
 cd <repo-folder>
 python -m venv venv
-source venv/bin/activate   # Linux / macOS
-# .\venv\Scripts\activate  # Windows
+.\venv\Scripts\activate 
+pip install -r requirements.txt
+
+```
+
+**Linux / macOS:**
+
+```bash
+
+git clone (https://github.com/shaniBerechya/chessboard-vision-ml.git
+cd <repo-folder>
+python -m venv venv
+source venv/bin/activate   
 pip install -r requirements.txt
 
 ```
@@ -79,11 +91,11 @@ python -m experiments.run -e cnn_baseline -o ./results --num_frames 10
 
 **Parameters:**
 
--e: experiment name from EXPERIMENTS
+*-e:* experiment name from EXPERIMENTS
 
--o: output folder for model checkpoints and logs
+*-o:* output folder for model checkpoints and logs
 
---num_frames: number of frames to use per game (optional)
+*--num_frames:* number of frames to use per game (optional)
 
 **Training outputs:**
 
@@ -96,7 +108,7 @@ Training logs and accuracy plots
 After training, you can use the predict_board.py script to classify a chessboard image and reconstruct the board state.
 
 ```bash
-python predict_board.py --model_path ./results/cnn_baseline_best.pt --image_path ./data/game1/frame_0001.jpg
+python predict_board.py --model_path <path_to_model_pat> --image_path <path_to_image_path>
 ```
 
 **Options:**
