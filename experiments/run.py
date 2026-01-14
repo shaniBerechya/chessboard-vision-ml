@@ -115,22 +115,45 @@ def load_trained_model(model_cls, model_config: dict, checkpoint_path: Path):
     return model, device
 
 
-def predict_board_labels(model, device, image_path: Path, image_size: int, ood_threshold: int=0.077) -> list[str]:
+def predict_board_labels(model, device, image_path: Path, image_size: int) -> list[str]:
     patches = split_board_with_context(str(image_path))
     preds = []
 
     with torch.no_grad():
-        for patch in patches:
+        for i, patch in enumerate(patches):
+            row = i // 8
+            col = i % 8
+
             patch = cv2.resize(patch, (image_size, image_size))
             tensor = torch.from_numpy(patch).permute(2, 0, 1).float() / 255.0
             tensor = tensor.unsqueeze(0).to(device)
             outputs = model(tensor)
             logits = output_to_logist(outputs)
-            if logits.argmax(dim=1) > ood_threshold:
-                pred_idx = int(logits.argmax(dim=1).item())
-                preds.append(INDEX_TO_LABEL.get(pred_idx, str(pred_idx)))
+
+            # Softmax for confidence
+            probs = torch.softmax(logits, dim=1)
+            conf, pred_idx = probs.max(dim=1)
+
+            pred_idx = pred_idx.item()
+            conf = conf.item()
+
+            pred_label = INDEX_TO_LABEL.get(pred_idx, str(pred_idx))
+            pred_logit_value = logits[0, pred_idx].item()
+
+
+            # choose OOD threshold based on predicted label
+            if pred_label == "empty":
+                ood_threshold = 0.75
             else:
-                preds.append('unknown')
+                ood_threshold = 0.5
+
+            if conf < ood_threshold:
+                preds.append("unknown")
+            else:
+                preds.append(pred_label)
+
+
+
 
     return preds
 
@@ -173,8 +196,7 @@ def save_qualitative_full_frames(
     checkpoint_path: Path,
     image_size: int,
     n_frames: int = 10,
-    seed: int = 42,
-    ood_threshold: int = 0.07
+    seed: int = 42
 ):
     random.seed(seed)
 
@@ -183,8 +205,20 @@ def save_qualitative_full_frames(
         print(f"⚠️ No frame images found under: {game_dir}. Skipping qualitative frames.")
         return
 
+    # find the specific frame
+    forced_name = "frame_020008"
+    forced_frame = next(
+        (p for p in images if forced_name in p.stem),
+        None
+    )
+
     n_frames = min(n_frames, len(images))
     chosen = random.sample(images, k=n_frames)
+
+
+    # add forced frame
+    if forced_frame is not None:
+        chosen.insert(0, forced_frame)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     orig_dir = out_dir / "original"
@@ -197,7 +231,7 @@ def save_qualitative_full_frames(
     all_preds = {}
     for p in chosen:
         frame_name = p.name
-        preds = predict_board_labels(model, device, p, image_size=image_size, ood_threshold=ood_threshold)
+        preds = predict_board_labels(model, device, p, image_size=image_size)
         all_preds[frame_name] = preds
 
         shutil.copy2(p, orig_dir / frame_name)
@@ -307,8 +341,7 @@ def main():
         checkpoint_path=checkpoint_path,
         image_size=cfg["training_config"]["image_size"],
         n_frames=args.num_frames,
-        seed=args.seed,
-        ood_threshold=cfg["training_config"]["ood_threshold"]
+        seed=args.seed
     )
 
     print("✅ Experiment finished successfully")

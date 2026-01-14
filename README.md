@@ -1,6 +1,6 @@
 # Chessboard Square Classification and Board-State Reconstruction
 
-This repository implements a system for **classifying each square of a chessboard** in real images and reconstructing the board state in **FEN notation**. 
+This repository implements a system for **classifying each square of a chessboard** in real images and reconstructing the board state in **FEN notation**.
 
 ---
 
@@ -36,7 +36,7 @@ Install the Python dependencies:
 git clone (https://github.com/shaniBerechya/chessboard-vision-ml.git
 cd <repo-folder>
 python -m venv venv
-.\venv\Scripts\activate 
+.\venv\Scripts\activate
 pip install -r requirements.txt
 
 ```
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 git clone (https://github.com/shaniBerechya/chessboard-vision-ml.git
 cd <repo-folder>
 python -m venv venv
-source venv/bin/activate   
+source venv/bin/activate
 pip install -r requirements.txt
 
 ```
@@ -73,7 +73,6 @@ EXPERIMENTS = {
                     dtype=torch.float
                 )
             ),
-            "ood_threshold": <ood_threshold>,
             "train_split": 0.6,
             "val_split": 0.2,
             "test_split": 0.2
