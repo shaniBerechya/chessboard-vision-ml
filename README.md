@@ -6,7 +6,7 @@ This repository implements a system for **classifying each square of a chessboar
 
 ## Table of Contents
 - [Project Overview](#project-overview)
-- [Environment Setup and Requirements](#environment-setup)
+- [Environment Setup and Requirements](#environment-setup-and-requirements)
 - [Training](#training)
 - [Running Inference / Evaluation](#running-inference--evaluation)
 
