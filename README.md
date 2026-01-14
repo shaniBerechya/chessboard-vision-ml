@@ -8,7 +8,7 @@ This repository implements a system for **classifying each square of a chessboar
 - [Project Overview](#project-overview)
 - [Environment Setup and Requirements](#environment-setup-and-requirements)
 - [Training](#training)
-- [Running Inference / Evaluation](#running-inference--evaluation)
+- [Running Inference / Evaluation](#Running-inference--evaluation)
 
 
 ---
@@ -33,7 +33,7 @@ Install the Python dependencies:
 
 ```bash
 
-git clone (https://github.com/shaniBerechya/chessboard-vision-ml.git
+git clone https://github.com/shaniBerechya/chessboard-vision-ml.git
 cd <repo-folder>
 python -m venv venv
 .\venv\Scripts\activate
@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ```bash
 
-git clone (https://github.com/shaniBerechya/chessboard-vision-ml.git
+git clone https://github.com/shaniBerechya/chessboard-vision-ml.git
 cd <repo-folder>
 python -m venv venv
 source venv/bin/activate
@@ -86,7 +86,7 @@ You can modify the model_config or training_config to experiment with different 
 **Run training:**
 
 ```bash
-python -m experiments.run -e cnn_baseline -o ./results --num_frames 10
+python -m experiments.run -e <model_config_name> -o ./results --num_frames 10
 ```
 
 **Parameters:**
@@ -108,14 +108,14 @@ Training logs and accuracy plots
 After training, you can use the predict_board.py script to classify a chessboard image and reconstruct the board state.
 
 ```bash
-python predict --model_path <path_to_model_pat> --image_path <path_to_image_path>
+python predict.py --model_path <path_to_model_pat> --image <path_to_image_path>
 ```
 
 **Options:**
 
 *--model_path:* path to your trained model checkpoint
 
-*--image_path:* path to the input chessboard image
+*--image:* path to the input chessboard image. default="trained_model/model.pth"
 
 *--output_fen:* optional path to save FEN notation output
 
