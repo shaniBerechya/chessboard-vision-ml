@@ -146,10 +146,9 @@ EXPERIMENTS = {
                     dtype=torch.float
                 )
             ),
-            "ood_threshold": 0.077,
-            "train_split": 0.6,
+            "train_split": 0.8,
             "val_split": 0.2,
-            "test_split": 0.2,
+            "test_split": 0.0,
             "split_seed": 42,
         }
     },

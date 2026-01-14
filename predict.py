@@ -1,10 +1,17 @@
+import argparse
+
 import torch
 import numpy as np
 import cv2
+import os
+
 
 from models.resnet_classifier import ResNetClassifier
 from data_pros.data_preprocessing import extract_square_with_context, CONTEXT_RATIO
+from data_pros.data_preprocessing import split_board_with_context
+
 from data_pros.chess_dataset import LABEL_TO_INDEX
+
 
 
 # ==================================================
@@ -17,7 +24,7 @@ _MODEL = None
 
 
 # ==================================================
-# Utils (same as training)
+# Utils
 # ==================================================
 def output_to_logist(outputs):
     if isinstance(outputs, (tuple, list)):
@@ -25,6 +32,9 @@ def output_to_logist(outputs):
     elif isinstance(outputs, dict):
         return outputs["logits"]
     return outputs
+
+INDEX_TO_LABEL = {v: k for k, v in LABEL_TO_INDEX.items()}
+
 
 
 # ==================================================
@@ -39,7 +49,7 @@ def _load_model():
             freeze_backbone=False
         )
         ckpt = torch.load(
-            "results/resnet18_weighted_loss_20260113_122024/model.pth",
+            _MODEL_PATH,
             map_location="cpu"
         )
         model.load_state_dict(ckpt)
@@ -49,7 +59,7 @@ def _load_model():
 
 
 # ==================================================
-# REQUIRED EVALUATION FUNCTION (Project 1)
+# predict_board API
 # ==================================================
 def predict_board(image: np.ndarray) -> torch.Tensor:
     """
@@ -72,7 +82,7 @@ def predict_board(image: np.ndarray) -> torch.Tensor:
     with torch.no_grad():
         for r in range(BOARD_SIZE):
             for c in range(BOARD_SIZE):
-                # EXACT same patch extraction as training
+                # patch extraction
                 patch = extract_square_with_context(
                     image,
                     r,
@@ -82,7 +92,7 @@ def predict_board(image: np.ndarray) -> torch.Tensor:
                     CONTEXT_RATIO
                 )
 
-                # EXACT same preprocessing
+                # preprocessing
                 patch = cv2.resize(patch, (IMAGE_SIZE, IMAGE_SIZE))
                 tensor = torch.from_numpy(patch).permute(2, 0, 1).float() / 255.0
                 tensor = tensor.unsqueeze(0)
@@ -96,13 +106,7 @@ def predict_board(image: np.ndarray) -> torch.Tensor:
                 pred_idx = int(pred_idx.item())
                 conf = float(conf.item())
 
-                print(
-                f"[square r{r}, c{c}] " 
-                f"pred_idx: {pred_idx}, "
-                f"confidence: {conf:.4f}"
-            )
-
-                # EXACT same OOD logic
+                # OOD logic
                 if pred_idx == LABEL_TO_INDEX["empty"]:
                     ood_threshold = 0.75
                 else:
@@ -164,11 +168,38 @@ def save_debug_image(
 # Local test only (safe to keep for development)
 # ==================================================
 if __name__ == "__main__":
-    img_bgr = cv2.imread("frame_012104.jpg")
+    parser = argparse.ArgumentParser(description="Run chessboard prediction on a single image.")
+    parser.add_argument(
+        "--image",
+        "-i",
+        required=True,
+        help="Path to an input image file (jpg/png).",
+    )
+    parser.add_argument(
+    "--model_path","-m",
+    default="trained_model/model.pth",
+    help="Path to trained model (.pth). Default: trained_model/model.pth"
+    )
+
+    args = parser.parse_args()
+    global _MODEL_PATH
+    _MODEL_PATH = args.model_path
+
+    if not os.path.exists(_MODEL_PATH):
+        raise FileNotFoundError(f"Model not found: {_MODEL_PATH}")
+
+
+    # Load image (BGR) -> RGB
+    if not os.path.exists(args.image):
+        raise FileNotFoundError(f"Image not found: {args.image}")
+
+    img_bgr = cv2.imread(args.image)
+    if img_bgr is None:
+        raise ValueError(f"cv2.imread failed to load image: {args.image}")
+
     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
     board = predict_board(img_rgb)
     print(board)
 
-    # overwrite debug image every run
     save_debug_image(img_rgb, board, "debug_result.png")

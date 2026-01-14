@@ -18,7 +18,8 @@ LABEL_TO_INDEX = {
     "bq": 10,  # Black Queen
     "bk": 11,  # Black King
 
-    "empty": 12  # Empty / OOD / Unknown
+    "empty": 12,  # Empty / OOD / Unknown
+    "unknown": 13
 }
 
 

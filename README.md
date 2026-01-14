@@ -108,7 +108,7 @@ Training logs and accuracy plots
 After training, you can use the predict_board.py script to classify a chessboard image and reconstruct the board state.
 
 ```bash
-python predict_board.py --model_path <path_to_model_pat> --image_path <path_to_image_path>
+python predict --model_path <path_to_model_pat> --image_path <path_to_image_path>
 ```
 
 **Options:**

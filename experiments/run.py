@@ -198,9 +198,10 @@ def save_qualitative_full_frames(
     n_frames: int = 10,
     seed: int = 42
 ):
-    random.seed(seed)
+
 
     images = find_frame_images(game_dir)
+
     if not images:
         print(f"⚠️ No frame images found under: {game_dir}. Skipping qualitative frames.")
         return
@@ -215,6 +216,8 @@ def save_qualitative_full_frames(
     n_frames = min(n_frames, len(images))
     chosen = random.sample(images, k=n_frames)
 
+    # set seed here for imags to plot will be ramdom
+    random.seed(seed)
 
     # add forced frame
     if forced_frame is not None:
