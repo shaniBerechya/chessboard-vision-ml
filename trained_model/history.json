@@ -1,0 +1,50 @@
+{
+  "train_loss": [
+    0.2679420138501617,
+    0.0507129996193941,
+    0.052232926429821205,
+    0.04020819722232609,
+    0.03844852371470565,
+    0.03280559951577172,
+    0.010890226464833681,
+    0.014538610265015095,
+    0.035524418894070785,
+    0.021114360427866265
+  ],
+  "val_loss": [
+    0.05205288488290566,
+    0.03846082083438442,
+    0.06442322370296351,
+    0.046939780506855384,
+    0.1197904648974843,
+    0.049699228927078114,
+    0.059077767053601925,
+    0.09413325072656047,
+    0.11074105482021337,
+    0.04871517796873303
+  ],
+  "accuracy_all": [
+    0.9947312961011591
+  ],
+  "accuracy_no_empty": [
+    0.9878934624697336
+  ],
+  "accuracy_only_pieces": [
+    0.9878934624697336
+  ],
+  "test_accuracy_all": [
+    1.0
+  ],
+  "test_accuracy_no_empty": [
+    0.0
+  ],
+  "test_accuracy_only_pieces": [
+    0.0
+  ],
+  "artifacts": {
+    "val_confusion_matrix": "results/resnet18_weighted_loss_20260114_153746/confusion_matrix_val.png",
+    "test_confusion_matrix": "results/resnet18_weighted_loss_20260114_153746/confusion_matrix_test.png",
+    "metrics_table_csv": "results/resnet18_weighted_loss_20260114_153746/metrics_table.csv",
+    "metrics_bar_png": "results/resnet18_weighted_loss_20260114_153746/metrics_bar.png"
+  }
+}

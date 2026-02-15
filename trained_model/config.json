@@ -1,0 +1,47 @@
+{
+  "experiment_name": "resnet18_weighted_loss",
+  "timestamp": "20260114_153746",
+  "model_class": "ResNetClassifier",
+  "model_config": {
+    "num_classes": 13,
+    "pretrained": true,
+    "freeze_backbone": false
+  },
+  "training_config": {
+    "lr": 0.0001,
+    "epochs": 10,
+    "batch_size": 32,
+    "image_size": 96,
+    "loss_fn": "CrossEntropyLoss",
+    "train_split": 0.8,
+    "val_split": 0.2,
+    "test_split": 0.0,
+    "split_seed": 42
+  },
+  "game_dirs": [
+    "./data_base/game2_per_frame",
+    "./data_base/game4_per_frame",
+    "./data_base/game5_per_frame",
+    "./data_base/game6_per_frame",
+    "./data_base/game7_per_frame"
+  ],
+  "checkpoint_path": "results/resnet18_weighted_loss_20260114_153746/model.pth",
+  "seed": 42,
+  "splits": {
+    "train_split": 0.8,
+    "val_split": 0.2,
+    "test_split": 0.0,
+    "split_seed": 42
+  },
+  "test_results": {
+    "accuracy_all": 1.0,
+    "accuracy_no_empty": 0.0,
+    "accuracy_only_pieces": 0.0,
+    "artifacts": {
+      "val_confusion_matrix": "results/resnet18_weighted_loss_20260114_153746/confusion_matrix_val.png",
+      "test_confusion_matrix": "results/resnet18_weighted_loss_20260114_153746/confusion_matrix_test.png",
+      "metrics_table_csv": "results/resnet18_weighted_loss_20260114_153746/metrics_table.csv",
+      "metrics_bar_png": "results/resnet18_weighted_loss_20260114_153746/metrics_bar.png"
+    }
+  }
+}
