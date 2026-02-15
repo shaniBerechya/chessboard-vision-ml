@@ -113,7 +113,7 @@ python predict.py --model_path <path_to_model_pat> --image <path_to_image_path>
 
 **Options:**
 
-*--model_path:* path to your trained model checkpoint
+*--model_path:* path to your trained model checkpoint (defult is our trained model)
 
 *--image:* path to the input chessboard image. default="trained_model/model.pth"
 
